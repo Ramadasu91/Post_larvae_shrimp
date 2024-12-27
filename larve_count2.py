@@ -4,6 +4,11 @@ import streamlit as st
 import tempfile
 
 # Streamlit App Title
+st.set_page_config(page_title="Skavch Postlarvae shrimp Count Engine", page_icon="📊", layout="wide")
+
+# Add an image to the header
+st.image("bg1.jpg", use_column_width=True)
+
 st.title("Post Larvae Shrimp Detection and Counting")
 
 # File uploader for video
