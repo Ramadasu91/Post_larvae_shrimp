@@ -4,7 +4,12 @@ import streamlit as st
 from PIL import Image
 
 # Streamlit App Title
-st.title("Post Larvae Shrimp Counting in Image")
+st.set_page_config(page_title="Skavch Post larvae Shrimp Count Engine", page_icon="📊", layout="wide")
+
+# Add an image to the header
+st.image("bg1.jpg", use_column_width=True)
+
+st.title("Skavch Post Larvae Shrimp Counting in Image")
 
 # File uploader for image
 uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
