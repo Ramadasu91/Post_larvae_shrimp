@@ -9,7 +9,7 @@ st.set_page_config(page_title="Skavch Postlarvae shrimp Count Engine", page_icon
 # Add an image to the header
 st.image("bg1.jpg", use_column_width=True)
 
-st.title("Post Larvae Shrimp Detection and Counting")
+st.title("Skavch Post Larvae Shrimp Detection and Counting")
 
 # File uploader for video
 uploaded_video = st.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
