@@ -1,50 +1,68 @@
+# File: app.py
 import cv2
 import numpy as np
 import streamlit as st
 from PIL import Image
 
-# Streamlit App Title
-st.set_page_config(page_title="Skavch Post larvae Shrimp Count Engine", page_icon="📊", layout="wide")
-
-# Add an image to the header
-st.image("bg1.jpg", use_column_width=True)
-
-st.title("Skavch Post Larvae Shrimp Counting in Image")
-
-# File uploader for image
-uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-if uploaded_image is not None:
-    # Load the image using PIL
-    image = Image.open(uploaded_image)
-    image_np = np.array(image)
-
+# Function to detect shrimps in the image
+def detect_shrimps(image):
+    # Convert to numpy array
+    img_np = np.array(image)
+    
+    # Resize for consistency
+    resized = cv2.resize(img_np, (800, 600))
+    
     # Convert to grayscale
-    gray = cv2.cvtColor(image_np, cv2.COLOR_RGB2GRAY)
-
-    # Apply Gaussian blur
+    gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)
+    
+    # Apply Gaussian Blur to remove noise
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-
-    # Thresholding to segment shrimps
-    _, binary = cv2.threshold(blurred, 50, 255, cv2.THRESH_BINARY_INV)
-
-    # Morphological operations to remove noise
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
-
+    
+    # Use adaptive thresholding to segment the image
+    thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                   cv2.THRESH_BINARY_INV, 11, 2)
+    
     # Find contours
-    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Draw contours and filter by size
     shrimp_count = 0
-
-    # Draw bounding boxes and count shrimps
+    output = resized.copy()
     for contour in contours:
+        # Filter by area size to eliminate small noise
         area = cv2.contourArea(contour)
-        if 50 < area < 5000:  # Filter contours by area (adjust based on shrimp size)
+        if 500 < area < 10000:  # Adjust these values as needed
             shrimp_count += 1
             x, y, w, h = cv2.boundingRect(contour)
-            cv2.rectangle(image_np, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            cv2.rectangle(output, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.putText(output, "Shrimp", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 
+                        0.5, (0, 255, 0), 2)
 
-    # Add shrimp count text to the image
-    cv2.putText(image_np, f"Count: {shrimp_count}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+    return output, shrimp_count
 
-    # Display results
-    st.image(image_np, caption=f"Shrimp Count: {shrimp_count}", use_column_width=True)
+# Streamlit UI
+def main():
+    st.title("Shrimp Detection App")
+    st.write("Upload an image to detect shrimps.")
+
+    # File uploader
+    uploaded_file = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
+    
+    if uploaded_file is not None:
+        # Load the uploaded image
+        image = Image.open(uploaded_file)
+        st.image(image, caption="Uploaded Image", use_column_width=True)
+        
+        # Process the image
+        st.write("Processing the image...")
+        detected_image, shrimp_count = detect_shrimps(image)
+        
+        # Display the processed image
+        st.image(detected_image, caption="Detected Shrimps", use_column_width=True)
+        
+        # Display the shrimp count
+        st.write(f"Number of shrimps detected: {shrimp_count}")
+
+# Run the app
+if __name__ == "__main__":
+    main()
